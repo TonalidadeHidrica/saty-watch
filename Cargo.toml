@@ -8,6 +8,6 @@ edition = "2018"
 
 [dependencies]
 anyhow = "1.0.42"
-clap = "2.33.3"
+clap = { version = "3.0.0-rc.4", features = ["derive"] }
 itertools = "0.10.1"
 notify = "4.0.17"

@@ -1,7 +1,7 @@
 use notify::{watcher, DebouncedEvent::*, RecursiveMode, Watcher};
 use std::{path::PathBuf, process::Command, sync::mpsc, time::Duration};
 
-use clap::{App, Arg};
+use clap::Parser;
 
 fn is_satysfi_related(path: PathBuf) -> bool {
     match path.extension().and_then(|a| a.to_str()) {
@@ -11,29 +11,29 @@ fn is_satysfi_related(path: PathBuf) -> bool {
     }
 }
 
+#[derive(Parser)]
+struct Opts {
+    target_file: PathBuf,
+    watch_dirs: Vec<PathBuf>,
+    #[clap(short, long)]
+    output: Option<PathBuf>,
+}
+
 fn main() -> anyhow::Result<()> {
-    let matches = App::new("saty-watch")
-        .arg(Arg::with_name("target_file").required(true))
-        .arg(Arg::with_name("watch_dirs").multiple(true))
-        .arg(
-            Arg::with_name("output")
-                .short("o")
-                .long("output")
-                .takes_value(true),
-        )
-        .get_matches();
-    let target_file = PathBuf::from(matches.value_of("target_file").unwrap());
+    let opts = Opts::parse();
+
+    let target_file = opts.target_file;
     let target_parent = target_file
         .parent()
         .expect("Not a file but a directory was specified");
-    let output_path = matches.value_of("output").map(PathBuf::from);
+    let output_path = opts.output;
 
     let (tx, rx) = mpsc::channel();
     let mut watcher = watcher(tx, Duration::from_millis(500))?;
 
     watcher.watch(target_parent, RecursiveMode::Recursive)?;
 
-    for watch_dir in matches.values_of("watch_dirs").iter_mut().flatten() {
+    for watch_dir in opts.watch_dirs {
         watcher.watch(watch_dir, RecursiveMode::Recursive)?;
     }
 
