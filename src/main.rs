@@ -23,15 +23,19 @@ fn main() -> anyhow::Result<()> {
     let opts = Opts::parse();
 
     let target_file = opts.target_file;
-    let target_parent = target_file
-        .parent()
-        .expect("Not a file but a directory was specified");
     let output_path = opts.output;
 
     let (tx, rx) = mpsc::channel();
     let mut watcher = watcher(tx, Duration::from_millis(500))?;
 
-    watcher.watch(target_parent, RecursiveMode::Recursive)?;
+    let target_parent = target_file
+        .parent()
+        .expect("Not a file but a directory was specified");
+    if target_parent.as_os_str().is_empty() {
+        watcher.watch(".", RecursiveMode::Recursive)?;
+    } else {
+        watcher.watch(target_parent, RecursiveMode::Recursive)?;
+    }
 
     for watch_dir in opts.watch_dirs {
         watcher.watch(watch_dir, RecursiveMode::Recursive)?;
