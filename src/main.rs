@@ -17,6 +17,8 @@ struct Opts {
     watch_dirs: Vec<PathBuf>,
     #[clap(short, long)]
     output: Option<PathBuf>,
+    #[clap(long)]
+    extra_args: String,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -47,6 +49,9 @@ fn main() -> anyhow::Result<()> {
     command.arg(&target_file);
     if let Some(path) = &output_path {
         command.arg("-o").arg(path);
+    }
+    for arg in opts.extra_args.trim().split_whitespace() {
+        command.arg(arg);
     }
     for event in rx.iter() {
         let condition = match event {
