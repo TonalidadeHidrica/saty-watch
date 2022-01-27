@@ -18,7 +18,7 @@ struct Opts {
     #[clap(short, long)]
     output: Option<PathBuf>,
     #[clap(long)]
-    extra_args: String,
+    extra_args: Option<String>,
 }
 
 fn main() -> anyhow::Result<()> {
@@ -50,8 +50,10 @@ fn main() -> anyhow::Result<()> {
     if let Some(path) = &output_path {
         command.arg("-o").arg(path);
     }
-    for arg in opts.extra_args.trim().split_whitespace() {
-        command.arg(arg);
+    if let Some(extra_args) = &opts.extra_args {
+        for arg in extra_args.trim().split_whitespace() {
+            command.arg(arg);
+        }
     }
     for event in rx.iter() {
         let condition = match event {
