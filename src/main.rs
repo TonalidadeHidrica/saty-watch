@@ -1,5 +1,7 @@
+use anyhow::Context;
 use notify::{watcher, DebouncedEvent::*, RecursiveMode, Watcher};
 use std::{path::PathBuf, process::Command, sync::mpsc, time::Duration};
+use wslpath::wsl_to_windows;
 
 use clap::Parser;
 
@@ -67,10 +69,23 @@ fn main() -> anyhow::Result<()> {
                 skim_open = true;
                 let with_extension = target_file.with_extension("pdf");
                 let output_path = output_path.as_ref().unwrap_or(&with_extension);
-                Command::new("open")
-                    .args(["-a", "Skim"])
-                    .arg(output_path)
-                    .output()?;
+                if wsl::is_wsl() {
+                    let output_path = wsl_to_windows(
+                        output_path
+                            .to_str()
+                            .context("Could not convert output path to string")?,
+                    )
+                    .expect("Failed to convert wsl path to windows path")
+                    .replace('/', "\\");  // <= dirty hack, should be handled by wslpath crate
+                    Command::new("explorer.exe")
+                        .arg(dbg!(output_path))
+                        .output()?;
+                } else {
+                    Command::new("open")
+                        .args(["-a", "Skim"])
+                        .arg(output_path)
+                        .output()?;
+                }
             }
         }
     }
