@@ -51,7 +51,7 @@ fn main() -> anyhow::Result<()> {
         command.arg("-o").arg(path);
     }
     if let Some(extra_args) = &opts.extra_args {
-        for arg in extra_args.trim().split_whitespace() {
+        for arg in extra_args.split_whitespace() {
             command.arg(arg);
         }
     }
